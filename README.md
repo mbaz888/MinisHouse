@@ -1,6 +1,6 @@
-# MinisHouse
+# MinisHouse 🐱
 
-Firmware de control de calefacción para una mini casa: dos zonas independientes, cada una con su calentador y su sonda de temperatura, panel OLED, interfaz web y actualización OTA.
+Firmware de control de calefacción para una **mini casa para gatos**: dos zonas independientes, cada una con su calentador de bajo voltaje y su sonda de temperatura, panel OLED, interfaz web y actualización OTA.
 
 ![Interfaz web de MinisHouse](docs/web-ui.png)
 
@@ -21,13 +21,13 @@ MCU **ESP32-C3** sobre PCB propia MinisHouseStd. Esquemático y PCB en [`hw/`](h
 |---|---|---|
 | LED de estado | 10 | |
 | Bus OneWire (DS18B20) | 4 | Dos sondas, una por zona |
-| Calentador 1 (MOSFET) | 3 | PWM LEDC a 1 kHz, 8 bits |
-| Calentador 2 (MOSFET) | 2 | PWM LEDC a 1 kHz, 8 bits |
+| Calentador 1 (MOSFET) | 3 | Bajo voltaje (15–20 V); PWM LEDC a 1 kHz, 8 bits |
+| Calentador 2 (MOSFET) | 2 | Bajo voltaje (15–20 V); PWM LEDC a 1 kHz, 8 bits |
 | Presencia 1 | 6 | Entrada con pull-up, activa a nivel bajo |
 | Presencia 2 | 7 | Entrada con pull-up, activa a nivel bajo |
 | OLED SSD1306 | I2C | 128x64, dirección 0x3C; SDA/SCL en GPIO8/GPIO9 |
 
-La etapa de potencia conmuta cada calentador mediante un MOSFET cuyo gate se controla por PWM. El estado de presencia se muestra en la web (icono de gato).
+La etapa de potencia conmuta cada calentador mediante un MOSFET cuyo gate se controla por PWM. Los calefactores trabajan a **bajo voltaje (15–20 V)**, evitando tener tensiones de 230 VAC cerca de los gatos. El icono 🐱 de la web indica presencia detectada junto a cada calentador.
 
 ## Arquitectura software
 
