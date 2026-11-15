@@ -384,6 +384,8 @@ void handleToggle() {
   // Reiniciar temporizadores
   heatingTime1 = 0;
   heatingTime2 = 0;
+  heatingTime1Warning = false;
+  heatingTime2Warning = false;
 
   if (heater1Enabled && heating1)
     ledcWrite(HEATER1_PIN, 255);
@@ -406,6 +408,11 @@ void handleToggleHeater1() {
   Serial.println("Toggling heater 1 state");
   heater1Enabled = !heater1Enabled;
 
+  // Al cambiar el estado del calentador se interrumpe la racha continua:
+  // reiniciar contador y retirar la advertencia inmediatamente
+  heatingTime1 = 0;
+  heatingTime1Warning = false;
+
   // Aplicar inmediatamente el cambio
   heating1 = calculateHeating(currentTemp1, targetTemp1, heating1);
   
@@ -425,6 +432,11 @@ void handleToggleHeater1() {
 void handleToggleHeater2() {
   Serial.println("Toggling heater 2 state");
   heater2Enabled = !heater2Enabled;
+
+  // Al cambiar el estado del calentador se interrumpe la racha continua:
+  // reiniciar contador y retirar la advertencia inmediatamente
+  heatingTime2 = 0;
+  heatingTime2Warning = false;
 
   // Aplicar inmediatamente el cambio
   heating2 = calculateHeating(currentTemp2, targetTemp2, heating2);
@@ -636,8 +648,6 @@ void loop() {
     lastTempRequest = currentMillis;
 
     // Calcular PWM basado en las temperaturas leídas
-    bool previousHeating1 = heating1;
-    bool previousHeating2 = heating2;
     heating1 = calculateHeating(currentTemp1, targetTemp1, heating1);
     heating2 = calculateHeating(currentTemp2, targetTemp2, heating2);
 
@@ -655,11 +665,10 @@ void loop() {
       }
     } else {
       ledcWrite(HEATER1_PIN, 0);
-      // Resetear contador y advertencia cuando el calentador se apaga
-      if (previousHeating1 && !heating1) {
-        heatingTime1 = 0;
-        heatingTime1Warning = false;
-      }
+      // Sin calentamiento efectivo (objetivo alcanzado o calentador
+      // deshabilitado) se rompe la racha y se retira la advertencia
+      heatingTime1 = 0;
+      heatingTime1Warning = false;
     }
 
     // HEATER 2: Control y monitorización de tiempo
@@ -676,11 +685,10 @@ void loop() {
       }
     } else {
       ledcWrite(HEATER2_PIN, 0);
-      // Resetear contador y advertencia cuando el calentador se apaga
-      if (previousHeating2 && !heating2) {
-        heatingTime2 = 0;
-        heatingTime2Warning = false;
-      }
+      // Sin calentamiento efectivo (objetivo alcanzado o calentador
+      // deshabilitado) se rompe la racha y se retira la advertencia
+      heatingTime2 = 0;
+      heatingTime2Warning = false;
     }
   }
 
