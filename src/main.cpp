@@ -667,7 +667,7 @@ void loop() {
       ledcWrite(HEATER1_PIN, 0);
       // Sin calentamiento efectivo (objetivo alcanzado o calentador
       // deshabilitado) se rompe la racha y se retira la advertencia
-      heatingTime1 = 0;
+      if (!heater1Enabled) heatingTime1 = 0; // Reiniciar tiempo de calentamiento si el calentador está deshabilitado
       heatingTime1Warning = false;
     }
 
@@ -687,7 +687,7 @@ void loop() {
       ledcWrite(HEATER2_PIN, 0);
       // Sin calentamiento efectivo (objetivo alcanzado o calentador
       // deshabilitado) se rompe la racha y se retira la advertencia
-      heatingTime2 = 0;
+      if (!heater2Enabled) heatingTime2 = 0; // Reiniciar tiempo de calentamiento si el calentador está deshabilitado
       heatingTime2Warning = false;
     }
   }
