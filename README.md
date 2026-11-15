@@ -7,7 +7,7 @@ Firmware de control de calefacción para una **mini casa para gatos**: dos zonas
 ## Objetivo
 
 - Mantener cada zona en su temperatura objetivo mediante histéresis (±1 °C).
-- Uso de almohadillas calefactables para mascotas de bajo voltafe (15v-20V)
+- Uso de almohadillas calefactables para mascotas de bajo voltaje (15v-20V)
 - Encendido/apagado global y habilitación independiente de cada calentador, con estado persistente.
 - Mostrar temperaturas, estado y potencia en una pantalla OLED SSD1306 de 128x64 (opcional).
 - Configuración y monitorización desde un navegador Web por WiFi.
