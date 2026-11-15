@@ -7,10 +7,12 @@ Firmware de control de calefacción para una **mini casa para gatos**: dos zonas
 ## Objetivo
 
 - Mantener cada zona en su temperatura objetivo mediante histéresis (±1 °C).
-- Encendido/apagado global y habilitación independiente de cada calentador, con estado persistente en NVS.
-- Mostrar temperaturas, estado y potencia en una OLED SSD1306 de 128x64.
-- Configuración y monitorización desde el navegador por WiFi.
+- Uso de almohadillas calefactables para mascotas de bajo voltafe (15v-20V)
+- Encendido/apagado global y habilitación independiente de cada calentador, con estado persistente.
+- Mostrar temperaturas, estado y potencia en una pantalla OLED SSD1306 de 128x64 (opcional).
+- Configuración y monitorización desde un navegador Web por WiFi.
 - Avisar si un calentador lleva más de 30 minutos funcionando de forma continua.
+- Control de presencia gatuna (opcional)
 - Actualizar el firmware por OTA desde la propia interfaz web.
 
 ## Arquitectura hardware
@@ -27,7 +29,8 @@ MCU **ESP32-C3** sobre PCB propia MinisHouseStd. Esquemático y PCB en [`hw/`](h
 | Presencia 2 | 7 | Entrada con pull-up, activa a nivel bajo |
 | OLED SSD1306 | I2C | 128x64, dirección 0x3C; SDA/SCL en GPIO8/GPIO9 |
 
-La etapa de potencia conmuta cada calentador mediante un MOSFET cuyo gate se controla por PWM. Los calefactores trabajan a **bajo voltaje (15–20 V)**, evitando tener tensiones de 230 VAC cerca de los gatos. El icono 🐱 de la web indica presencia detectada junto a cada calentador.
+La etapa de potencia conmuta cada calentador mediante un MOSFET cuyo gate se controla por PWM. Los calefactores trabajan a **bajo voltaje (15–20 V)**, evitando tener tensiones de 230 VAC cerca de los gatos. 
+
 
 ## Arquitectura software
 
@@ -36,6 +39,7 @@ La etapa de potencia conmuta cada calentador mediante un MOSFET cuyo gate se con
 - `loop()` no bloqueante: lectura asíncrona de las DS18B20 cada 1 s, control de histéresis y PWM, refresco de la OLED cada 500 ms y atención del servidor web.
 - **Control**: si la temperatura baja de `objetivo - 1 °C` enciende; si sube de `objetivo + 1 °C` apaga. PWM configurado a 1 kHz/8 bits, usado actualmente como todo/nada (0/255).
 - **Persistencia (NVS)**: temperaturas objetivo, estado global del sistema y habilitación de cada calentador.
+- **Control de presencia**:El icono 🐱 de la web indica presencia detectada junto a cada calentador (opcional).
 - **Seguridad**: se descartan lecturas de -127 °C (sonda desconectada); aviso visible en la web tras 30 min de calentamiento continuo (no corta la calefacción automáticamente).
 
 ### API web
