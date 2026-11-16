@@ -66,8 +66,15 @@ bool heating2 = false;
 bool presenceSensor1 = true;
 bool presenceSensor2 = false;
 
+// Tiempo acumulado de calentamiento (se muestra en la web y se reinicia
+// únicamente con una acción manual sobre el calentador o el sistema)
 long heatingTime1 = 0;
 long heatingTime2 = 0;
+
+// Tiempo de calentamiento continuo (controla MAX_HEATING_TIME y se reinicia
+// cada vez que el calentador deja de calentar, aunque siga habilitado)
+long continuousHeatingTime1 = 0;
+long continuousHeatingTime2 = 0;
 
 // Umbral de tiempo máximo de calentamiento continuo (30 minutos en milisegundos)
 const long MAX_HEATING_TIME = 30 * 60 * 1000; // 30 min = 1,800,000 ms
@@ -381,9 +388,11 @@ void handleToggle() {
   heating1 = calculateHeating(currentTemp1, targetTemp1, heating1);
   heating2 = calculateHeating(currentTemp2, targetTemp2, heating2);
 
-  // Reiniciar temporizadores
+  // Acción manual: reiniciar tiempos acumulados y continuos, y retirar avisos
   heatingTime1 = 0;
   heatingTime2 = 0;
+  continuousHeatingTime1 = 0;
+  continuousHeatingTime2 = 0;
   heatingTime1Warning = false;
   heatingTime2Warning = false;
 
@@ -408,9 +417,10 @@ void handleToggleHeater1() {
   Serial.println("Toggling heater 1 state");
   heater1Enabled = !heater1Enabled;
 
-  // Al cambiar el estado del calentador se interrumpe la racha continua:
-  // reiniciar contador y retirar la advertencia inmediatamente
+  // Acción manual: reiniciar el tiempo acumulado y la racha continua,
+  // y retirar la advertencia inmediatamente
   heatingTime1 = 0;
+  continuousHeatingTime1 = 0;
   heatingTime1Warning = false;
 
   // Aplicar inmediatamente el cambio
@@ -433,9 +443,10 @@ void handleToggleHeater2() {
   Serial.println("Toggling heater 2 state");
   heater2Enabled = !heater2Enabled;
 
-  // Al cambiar el estado del calentador se interrumpe la racha continua:
-  // reiniciar contador y retirar la advertencia inmediatamente
+  // Acción manual: reiniciar el tiempo acumulado y la racha continua,
+  // y retirar la advertencia inmediatamente
   heatingTime2 = 0;
+  continuousHeatingTime2 = 0;
   heatingTime2Warning = false;
 
   // Aplicar inmediatamente el cambio
@@ -654,10 +665,11 @@ void loop() {
     // HEATER 1: Control y monitorización de tiempo
     if (heater1Enabled && heating1) {
       ledcWrite(HEATER1_PIN, 255);
-      heatingTime1 += tempInterval;
-      
+      heatingTime1 += tempInterval;            // Acumulado para la web
+      continuousHeatingTime1 += tempInterval;  // Racha continua para el límite
+
       // Verificar si se excede el tiempo máximo de calentamiento continuo
-      if (heatingTime1 >= MAX_HEATING_TIME) {
+      if (continuousHeatingTime1 >= MAX_HEATING_TIME) {
         if (!heatingTime1Warning) {
           heatingTime1Warning = true;
           Serial.println("⚠️  ADVERTENCIA: Calentador 1 ha estado funcionando continuamente por más de 30 minutos!");
@@ -665,19 +677,21 @@ void loop() {
       }
     } else {
       ledcWrite(HEATER1_PIN, 0);
-      // Sin calentamiento efectivo (objetivo alcanzado o calentador
-      // deshabilitado) se rompe la racha y se retira la advertencia
-      if (!heater1Enabled) heatingTime1 = 0; // Reiniciar tiempo de calentamiento si el calentador está deshabilitado
+      // La racha continua se rompe al dejar de calentar, pero el tiempo
+      // acumulado se conserva hasta una acción manual
+      continuousHeatingTime1 = 0;
       heatingTime1Warning = false;
+      if (!heater1Enabled) heatingTime1 = 0; // Deshabilitado manualmente: reiniciar acumulado
     }
 
     // HEATER 2: Control y monitorización de tiempo
     if (heater2Enabled && heating2) {
       ledcWrite(HEATER2_PIN, 255);
-      heatingTime2 += tempInterval;
-      
+      heatingTime2 += tempInterval;            // Acumulado para la web
+      continuousHeatingTime2 += tempInterval;  // Racha continua para el límite
+
       // Verificar si se excede el tiempo máximo de calentamiento continuo
-      if (heatingTime2 >= MAX_HEATING_TIME) {
+      if (continuousHeatingTime2 >= MAX_HEATING_TIME) {
         if (!heatingTime2Warning) {
           heatingTime2Warning = true;
           Serial.println("⚠️  ADVERTENCIA: Calentador 2 ha estado funcionando continuamente por más de 30 minutos!");
@@ -685,10 +699,11 @@ void loop() {
       }
     } else {
       ledcWrite(HEATER2_PIN, 0);
-      // Sin calentamiento efectivo (objetivo alcanzado o calentador
-      // deshabilitado) se rompe la racha y se retira la advertencia
-      if (!heater2Enabled) heatingTime2 = 0; // Reiniciar tiempo de calentamiento si el calentador está deshabilitado
+      // La racha continua se rompe al dejar de calentar, pero el tiempo
+      // acumulado se conserva hasta una acción manual
+      continuousHeatingTime2 = 0;
       heatingTime2Warning = false;
+      if (!heater2Enabled) heatingTime2 = 0; // Deshabilitado manualmente: reiniciar acumulado
     }
   }
 
